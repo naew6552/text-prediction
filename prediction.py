@@ -25,8 +25,8 @@ class Model:
         self.b_model = self.buildBigram(file_name)
 
 
-    def predict(self, buffer):
-        prev_word = buffer[-1]
+    def predict(self, in_list):
+        prev_word = in_list[-1]
         bigram = (prev_word, "")
         subset_list = []
         counts_list = []
@@ -34,22 +34,18 @@ class Model:
         for b in self.b_model:
             if b[0] == bigram[0]:
                 subset_list.append(b)
-                counts_list.append(bigram_model[b])
+                counts_list.append(self.b_model[b])
 
         total = sum(counts_list)
     
         counts_list = [count/total for count in counts_list]
 
         choice = np.random.choice(len(subset_list), p=counts_list)
-        #sentence += " " + subset_list[choice][1]
 
-        #bigram = (subset_list[choice][1], subset_list[choice][1])
         return subset_list[choice][1]
 
     def completer(self, text, state):
-        ## TODO: Get buffer into list, and use last word to pass to predict
-        buffer = rl.get_line_buffer()
-        print(buffer)
+        buffer = rl.get_line_buffer().split() 
         prediction = self.predict(buffer)
         results = [prediction,None]
         return results[state]
