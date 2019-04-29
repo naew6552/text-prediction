@@ -32,7 +32,7 @@ class Model:
         counts_list = []
         total = 0
         for b in self.b_model:
-            if b[0] == bigram[0]:
+            if b[0] == prev_word:
                 subset_list.append(b)
                 counts_list.append(self.b_model[b])
 
@@ -40,9 +40,18 @@ class Model:
     
         counts_list = [count/total for count in counts_list]
 
-        choice = np.random.choice(len(subset_list), p=counts_list)
-
-        return subset_list[choice][1]
+        if len(subset_list) == 0:
+            for b in self.b_model:
+                if b[0] == '<unk>':
+                    subset_list.append(b)
+                    counts_list.append(self.b_model[b])
+            total = sum(counts_list)
+            counts_list = [count/total for count in counts_list]
+            choice = np.random.choice(len(subset_list), p=counts_list) 
+            return subset_list[choice][1]
+        else: 
+            choice = np.random.choice(len(subset_list), p=counts_list) 
+            return subset_list[choice][1]
 
     def completer(self, text, state):
         buffer = rl.get_line_buffer().split() 
@@ -100,7 +109,8 @@ def read_cli():
             break
 
 
-model = Model("corpus.txt")
+model = Model("corpus/cleaned_woke_mice.txt")
+model.predict(["broski"])
 rl.set_completer(model.completer)
 rl.parse_and_bind('tab: complete') #set the parser to use tab complete
 read_cli()
