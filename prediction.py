@@ -48,9 +48,13 @@ class Model:
             total = sum(counts_list)
             counts_list = [count/total for count in counts_list]
             choice = np.random.choice(len(subset_list), p=counts_list) 
+            if subset_list[choice][1] == '<unk>':
+                return self.predict('<unk>')
             return subset_list[choice][1]
         else: 
             choice = np.random.choice(len(subset_list), p=counts_list) 
+            if subset_list[choice][1] == '<unk>':
+                return self.predict('<unk>')
             return subset_list[choice][1]
 
     def completer(self, text, state):
@@ -100,6 +104,17 @@ class Model:
         return freqs
 
 
+    def BuildFormatted(self, file_name):
+        freqs = {}
+        with open(file_name, "r") as file_:
+            for line in file_:
+                line = line.split()
+                freqs[(line[1], line[2])] = line[0]
+
+        print(freqs)
+        return freqs
+
+
 
 def read_cli():
     print("Enter 'quit' to quit")
@@ -108,9 +123,31 @@ def read_cli():
         if text == "quit":
             break
 
+def test_prediction(file_name, model):
+    correct = 0
+    incorrect = 0
+    total = 0
+    with open(file_name, "r") as file_:
+        for line in file_:
+            line = line.split()
+            for i in range(0,len(line)):
+                word = line[i]
+                prediction = model.predict(word)
+                if word == prediction:
+                    correct += 1
+                else:
+                    incorrect += 1
+                total += 1
+    print(file_name)
+    print(correct, incorrect, total)
+    print("{}% correct, {}%incorrect".format((correct/total),(incorrect/total)))
+                
 
-model = Model("corpus/cleaned_woke_mice.txt")
-model.predict(["broski"])
+
+model = Model("corpus/nate_corpus.txt")
 rl.set_completer(model.completer)
 rl.parse_and_bind('tab: complete') #set the parser to use tab complete
-read_cli()
+model.BuildFormatted("corpus/w2_.txt")
+#test_prediction("corpus/test1.txt", model)
+#test_prediction("corpus/test2.txt", model)
+#read_cli()
