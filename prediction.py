@@ -13,6 +13,7 @@ CLI Arguments:
     - c
 
 '''
+import sys
 import readline as rl
 from collections import defaultdict
 from collections import Counter
@@ -23,6 +24,7 @@ class Model:
 
     def __init__(self, file_name):
         self.b_model = self.buildBigram(file_name)
+        self.file_name = file_name
 
 
     def predict(self, in_list):
@@ -123,31 +125,66 @@ def read_cli():
         if text == "quit":
             break
 
-def test_prediction(file_name, model):
-    correct = 0
-    incorrect = 0
+def test(model, file_name="corpus/test.txt", num_to_predict=10):
+    print("Testing using {} corpus, and test file {}".format(file_name, model.file_name))
     total = 0
+    totalCorrect = 0
+    correctDict = {i: 0 for i in range(1, num_to_predict+1)}
     with open(file_name, "r") as file_:
         for line in file_:
             line = line.split()
             for i in range(0,len(line)):
                 word = line[i]
-                prediction = model.predict(word)
-                if word == prediction:
-                    correct += 1
-                else:
-                    incorrect += 1
+                for j in range(0, num_to_predict):
+                    prediction = model.predict(word)
+                    if word == prediction:
+                        correctDict[(j+1)] += 1
+                        totalCorrect += 1
+                        break
+                total += 1
+    for i in correctDict:
+        if i > 1:
+            correctDict[i] += correctDict[i-1]
+        print(i, (correctDict[i] / total))
+    #print("{}% correct, {}% incorrect".format((correct/total),(1 - (correct/total))))
+    pass
+
+def test_prediction1(file_name, model, num_to_predict=1):
+    correct = 0
+    total = 0
+    print("Test {}, predicting {} words".format(file_name, num_to_predict))
+    with open(file_name, "r") as file_:
+        for line in file_:
+            line = line.split()
+            for i in range(0,len(line)):
+                word = line[i]
+                for _ in range(0, num_to_predict):
+                    prediction = model.predict(word)
+                    if word == prediction:
+                        correct += 1
+                        break
                 total += 1
     print(file_name)
-    print(correct, incorrect, total)
-    print("{}% correct, {}%incorrect".format((correct/total),(incorrect/total)))
-                
+    print(correct, (total-correct), total)
+    print("{}% correct, {}%incorrect".format((correct/total),(1 - (correct/total))))
 
 
-model = Model("corpus/nate_corpus.txt")
-rl.set_completer(model.completer)
-rl.parse_and_bind('tab: complete') #set the parser to use tab complete
-model.BuildFormatted("corpus/w2_.txt")
-#test_prediction("corpus/test1.txt", model)
-#test_prediction("corpus/test2.txt", model)
+def main():
+    model = Model("corpus/big_corpus.txt")
+    rl.set_completer(model.completer)
+    rl.parse_and_bind('tab: complete') #set the parser to use tab complete
+    print(sys.argv[1])
+
+    if len(sys.argv) > 1:
+        if sys.argv[1] == '-t':
+            if len(sys.argv) > 2:
+                if sys.argv[2]:
+                    test(model, sys.argv[2])
+            else:
+                test(model)
+        elif sys.argv[1] == '-i':
+            read_cli()
+
+main()
+
 #read_cli()
